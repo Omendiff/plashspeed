@@ -1,79 +1,137 @@
-;macro for printing a string
-print macro M
-mov ah,09h
-mov dx,offset M
-int 21h
-endm
-
 .MODEL SMALL
 .STACK 64
 
 ;---------------Data Segment----------------
 .DATA	;data definition 
-	MAIN_MENU DB 10, 13, "-----PLASHSPEED POS-----"
-		  DB 10, 13, "1. CHECKOUT"
-		  DB 10, 13, "2. INVENTOTY MANAGEMENT"
-		  DB 10, 13, "3. CUSTOMER MANAGEMENT"
-		  DB 10, 13, "4. SALES REPORTING"
-		  DB 10, 13, "5. RETURN AND REFUND"
-		  DB 10, 13, "6. STAFF MANAGEMNT"
-		  DB 10, 13, "7. EXIT"
-		  DB 10, 13, " "
-		  DB 10, 13, "CHOICE: $"
+;---main menu
+	M1 DB 10, 13, "-----PLASHSPEED POS-----"
+	M2 DB 10, 13, "1. CHECKOUT"
+	M3 DB 10, 13, "2. INVENTORY MANAGEMENT"
+	M4 DB 10, 13, "3. CUSTOMER MANAGEMENT"
+	M5 DB 10, 13, "4. SALES REPORTING"
+	M6 DB 10, 13, "5. RETURN AND REFUND"
+	M7 DB 10, 13, "6. STAFF MANAGEMNT"
+	M8 DB 10, 13, "7. EXIT"
+	M9 DB 10, 13, " "
+	M10 DB 10, 13, "CHOICE: $"
 	
-	STAFF_MENU_1 DB 10, 13, "--STAFF MANAGEMENT--"
-		     DB 10, 13, "1. STAFF REPORT"
-		     DB 10, 13, "2. STAFF INFO"
-		     DB 10, 13, "3. EXIT"
-		     DB 10, 13, " "
-		     DB 10, 13, "CHOICE $"
 
-	STAFF_MENU_2 DB 10, 13, "----STAFF INFO----"
-		     DB 10, 13, "1. CURRENT STAFF"
-		     DB 10, 13, "2. NEW STAFF"
-		     DB 10, 13, "3. EXIT"
-		     DB 10, 13, " "
-		     DB 10, 13, "CHOICE $"
 
-	STAFF_MENU_3 DB 10, 13, "--CURRENT STAFF--"
-		     DB 10, 13, "1. CHANGE PASSWORD"
-		     DB 10, 13, "2. REMOVE STAFF"
-		     DB 10, 13, "3. EXIT"
-		     DB 10, 13, " "
-		     DB 10, 13, "CHOICE $"
+;---staff menu
+	STF_M1 DB 10, 13, "--STAFF MANAGEMENT--"
+	STF_M2 DB 10, 13, "1. STAFF REPORT"
+	STF_M3 DB 10, 13, "2. STAFF INFO"
+	STF_M4 DB 10, 13, "3. EXIT"
+	STF_M5 DB 10, 13, " "
+	STF_M6 DB 10, 13, "CHOICE 
+	STF_M7 DB 10, 13, "----STAFF INFO----"
+	STF_M8 DB 10, 13, "1. CURRENT STAFF"
+	STF_M9 DB 10, 13, "2. NEW STAFF"
+	STF_M10 DB 10, 13, "3. EXIT"
+	STF_M11 DB 10, 13, " "
+	STF_M12 DB 10, 13, "CHOICE 
+	STF_M13 DB 10, 13, "--CURRENT STAFF--"
+	STF_M14 DB 10, 13, "1. CHANGE PASSWORD"
+	STF_M15 DB 10, 13, "2. REMOVE STAFF"
+	STF_M16 DB 10, 13, "3. EXIT"
+	STF_M17 DB 10, 13, " "
+	STF_M18 DB 10, 13, "CHOICE $"
 
+;---SYSTEM MESSAGE
+	MSG1 DB 10, 13, "EXITING PLASHSPEED..... $"
+	MSG2 DB 10, 13, "INVALID CHOICE, PLEASE TRY AGAIN!!! $"
 
 ;---------------Code Segment----------------
 .CODE
 
-START:
+MAIN PROC
 	MOV AX,@DATA  ; Define data segment
 	MOV DS,AX
 
 ;--------------codes
 AGAIN:
-	PRINT MENU
-	CALL ACCEPT
-	MOV DS, AX
-
-
-
-;---------------end--------------------
-	MOV AX,4C00H
+	MOV AH, 09H
+	LEA DX, M1
 	INT 21H
 
+	MOV AH, 09H
+	LEA DX, M2
+	INT 21H
 
+	MOV AH, 09H
+	LEA DX, M3
+	INT 21H
 
+	MOV AH, 09H
+	LEA DX, M4
+	INT 21H
 
-;--------------procedures---------------
-;---accept
-ACCEPT PROC NEAR 
+	MOV AH, 09H
+	LEA DX, M5
+	INT 21H
+
+	MOV AH, 09H
+	LEA DX, M6
+	INT 21H
+
+	MOV AH, 09H
+	LEA DX, M7
+	INT 21H
+
+	MOV AH, 09H
+	LEA DX, M8
+	INT 21H
+
+	MOV AH, 09H
+	LEA DX, M9
+	INT 21H
+
+	MOV AH, 09H
+	LEA DX, M10
+	INT 21H
+
 	MOV AH, 01H
 	INT 21H
-	RET
-ACCEPT ENDP
+	MOV BH, AL
+	SUB BH, 48
+	
+	CMP BH, 1
+	JNE CHECKOUT
+
+	CMP BH, 2
+	JNE INVENTORY
+
+	CMP BH, 3
+	JNE CUSTOMER
+
+	CMP BH, 4
+	JNE SALES
+
+	CMP BH, 5
+	JNE RETURN
+
+	CMP BH, 6
+	JNE STAFF
+
+	CMP BH, 7
+	JNE EXIT
+
+	CMP BH, 8
+	JNE INVALID
 
 
+INVALID:			; INVSLID CHOICE
+	MOV AH, 09H
+	LEA DX, MSG2
+	INT 21H
+	JMP AGAIN
 
-END START
-END
+EXIT:				; EXIT PROGRAM
+	MOV AH, 09H
+	LEA DX, MSG1
+	INT 21H
+	MOV AX, 4C00H
+	INT 21H
+
+	MAIN ENDP
+END MAIN
