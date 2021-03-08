@@ -23,7 +23,16 @@ ENDM
 			  DB 10, 13, "  "
 			  DB 10, 13, "CHOICE: $"
 	
-
+;---inventory menu
+	INV_MENU DB 10, 13, "XXXXXXXXXXXXXXXXXXXXXXXXXXX "
+			 DB 10, 13, "---------INVENTORY MANAGEMENT---------"
+			 DB 10, 13, "1. DISPLAY STOCK REPORT"
+			 DB 10, 13, "2. UPDATE STOCK"
+			 DB 10, 13, "3. SET ORDER REMINDER"
+			 DB 10, 13, "4. SEND ORDER REMINDER"
+			 DB 10, 13, "5. EXIT"
+			 DB 10, 13, " "
+			 DB 10, 13, "CHOICE: $"
 
 ;---staff menu 1
 	STF_MENU1 DB 10, 13, "XXXXXXXXXXXXXXXXXXXXXXXXXXX "
@@ -34,7 +43,7 @@ ENDM
 			  DB 10, 13, "4. REMOVE STAFF "
 			  DB 10, 13, "5. EXIT "
 			  DB 10, 13, "  "
-			  DB 10, 13, "CHOICE $" 
+			  DB 10, 13, "CHOICE: $" 
 ;---staff change password
 	STF_MENU4 DB 10, 13, "XXXXXXXXXXXXXXXXXXXXXXXXXXX "
 			  DB 10, 13, "------CHANGE PASSWORD------ "
@@ -52,6 +61,9 @@ ENDM
 	MSG2 DB 10, 13, "INVALID CHOICE, PLEASE TRY AGAIN!!! $"
 	MSG3 DB 10, 13, "REDIRECTING TO PLASHSPEED..... $"
 
+;---STORE INPUT
+	CHOICE DB 0, 0		;STORE CHOICE INPUT
+
 ;---------------Code Segment----------------
 .CODE
 
@@ -64,7 +76,7 @@ TOP:
 	PRINT MAIN_MENU
 	CALL ACCEPT		; USER ENTER CHOICE
 	MOV BL, AL
-	SUB BL, 48
+	SUB BL, 30H
 	
 
 ;---------CHECKOUT------------
@@ -80,6 +92,44 @@ INVENTORY:
 	CMP BL, 2		; GO TO CUSTOMER IF CHOICE != 2
 	JNE CUSTOMER
 
+	PRINT INV_MENU
+	CALL ACCEPT
+	MOV BL, AL
+	SUB BL, 30H
+
+	STK_REPORT:
+		CMP BL, 1
+		JNE STK_UPDATE
+
+		JMP TOP
+
+	STK_UPDATE:
+		CMP BL, 2
+		JNE STK_SET_RMD
+
+		JMP TOP
+
+	STK_SET_RMD:
+		CMP BL, 3
+		JNE STK_RMD
+
+		JMP TOP
+
+	STK_RMD:
+		CMP BL, 4
+		JNE EXIT_INV
+
+		JMP TOP
+
+	EXIT_INV:
+		CMP BL, 5			; EXIT
+		JNE STK_INVALID
+		PRINT MSG3
+		JMP TOP
+
+	STK_INVALID:
+		PRINT MSG2
+		JMP INVENTORY
 
 	JMP TOP
 
@@ -120,6 +170,7 @@ STAFF:
 	STF_REPORT:
 		CMP BL, 1			; REPORT
 		JNE STF_NEW
+
 
 
 		JMP TOP
@@ -188,7 +239,24 @@ INVALID:
 ;	INT 21H
 
 
+READFILE PROC
+	mov ah, 3dh ;open the file
+	mov al, 0 ;open for reading
+	lea dx, file_name 
+	int 21h 
+	mov [filehandle], ax 
 
+	mov ah, 3fh  
+	lea dx, Text_Buffer
+	mov cx, 1 ; Read 1 Byte
+	mov bx, [filehandle] 
+	int 21h	
+
+	mov bx, [filehandle]
+	mov ah, 3eh ;close file
+	int 21h
+	ret
+ReadFile endp
 
 
 
@@ -199,6 +267,8 @@ INVALID:
 ACCEPT PROC NEAR
 	MOV AH, 01H
 	INT 21H
+
+
 	RET
 ACCEPT ENDP
 ;--------------EXIT PROGRAM
