@@ -19,7 +19,7 @@ ENDM
 			  DB 10, 13, "4. SALES REPORTING "
 			  DB 10, 13, "5. RETURN AND REFUND "
 			  DB 10, 13, "6. STAFF MANAGEMNT "
-			  DB 10, 13, "7. EXIT "
+			  DB 10, 13, "9. EXIT "
 			  DB 10, 13, "  "
 			  DB 10, 13, "CHOICE: $"
 	
@@ -61,8 +61,6 @@ ENDM
 	MSG2 DB 10, 13, "INVALID CHOICE, PLEASE TRY AGAIN!!! $"
 	MSG3 DB 10, 13, "REDIRECTING TO PLASHSPEED..... $"
 
-;---STORE INPUT
-	CHOICE DB 0, 0		;STORE CHOICE INPUT
 
 ;---------------Code Segment----------------
 .CODE
@@ -208,7 +206,7 @@ STAFF:
 
 ;-------EXIT----------------------
 EXIT:
-	CMP BL, 7
+	CMP BL, 9
 	JNE INVALID
 		PRINT MSG1
 		JMP QUIT 
