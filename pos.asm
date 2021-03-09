@@ -51,7 +51,7 @@ ENDM
 			  DB 10, 13, "ENTER NEW PASSWORD:  "
 			  DB 10, 13, "CONFIRM NEW PASSWORD:  "
 	
-	OLD_PASS DB 25, ?, 25 DUP('$')
+	OLD_PASS DB 26, ?, 26 DUP('$')
 
 
 ;---return and refund
@@ -61,13 +61,9 @@ ENDM
 		   DB 10, 13, "2. NO "
 		   DB 10, 13, " "
 		   DB 10, 13, "CHOICE:  $"
-	RTN_M4 DB 10, 13, "RETURN SUCCED, PROCEED TO REFUND $"
-	RTN_M5 DB 10, 13, "REFUND REQUEST FAIL $"
-	buff    db  26        ;MAX NUMBER OF CHARACTERS ALLOWED (25).
-            db  ?         ;NUMBER OF CHARACTERS ENTERED BY USER.
-            db  26 dup(0) ;CHARACTERS ENTERED BY USER.
-
-
+	RTN_M4 DB 10, 13, "RETURN SUCCED, PROCEED TO REFUND.... $"
+	RTN_M5 DB 10, 13, "REFUND REQUEST DENIED $"
+	RTN_ID DB 26, ?, 26 DUP(0)        ;MAX NUMBER OF CHARACTERS ALLOWED (25)
 
 ;---SYSTEM MESSAGE
 	MSG1 DB 10, 13, "EXITING PLASHSPEED..... $"
@@ -167,26 +163,27 @@ RETURN:
 
 	PRINT RTN_M1
 ;CAPTURE STRING FROM KEYBOARD.                                    
-            mov ah, 0Ah ;SERVICE TO CAPTURE STRING FROM KEYBOARD.
-            mov dx, offset buff
-            int 21h                 
+        mov ah, 0Ah ;SERVICE TO CAPTURE STRING FROM KEYBOARD.
+        mov dx, offset RTN_ID
+        int 21h                 
 
 ;CHANGE CHR(13) BY '$'.
-            mov si, offset buff + 1 ;NUMBER OF CHARACTERS ENTERED.
-            mov cl, [ si ] ;MOVE LENGTH TO CL.
-            mov ch, 0      ;CLEAR CH TO USE CX. 
-            inc cx ;TO REACH CHR(13).
-            add si, cx ;NOW SI POINTS TO CHR(13).
-            mov al, '$'
-            mov [ si ], al ;REPLACE CHR(13) BY '$'.            
+        mov si, offset RTN_ID + 1 ;NUMBER OF CHARACTERS ENTERED.
+        mov cl, [ si ] ;MOVE LENGTH TO CL.
+        mov ch, 0      ;CLEAR CH TO USE CX. 
+        inc cx ;TO REACH CHR(13).
+        add si, cx ;NOW SI POINTS TO CHR(13).
+        mov al, '$'
+        mov [ si ], al ;REPLACE CHR(13) BY '$'.            
 
-	PRINT RTN_M2
-;DISPLAY STRING.                   
-            mov ah, 9 ;SERVICE TO DISPLAY STRING.
-            mov dx, offset buff + 2 ;MUST END WITH '$'.
-            int 21h
-	
+
 	RTN_RESULT:
+		PRINT RTN_M2
+		;---DISPLAY STRING.                   
+        mov ah, 9 ;SERVICE TO DISPLAY STRING.
+        mov dx, offset RTN_ID + 2 ;MUST END WITH '$'.
+        int 21h
+	
 		PRINT RTN_M3
 		CALL ACCEPT
 		MOV BL, AL
@@ -271,21 +268,8 @@ INVALID:
 	JMP TOP
 
 
-
-
-
-
-
 ;;---CHANGE PASSWORD------------------------------------------
 ;CHANGE_PASS:
-;	MOV AH, 09H
-;	LEA DX, STF_M19
-;	INT 21H
-;
-;	MOV AH, 09H
-;	LEA DX, STF_M20
-;	INT 21H
-;
 ;	MOV AH, 01H
 ;	LEA DX, OFFSET OLD_PASS
 ;	INT 21H
