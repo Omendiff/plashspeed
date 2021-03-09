@@ -54,6 +54,19 @@ ENDM
 	OLD_PASS DB 25, ?, 25 DUP('$')
 
 
+;---return and refund
+	RTN_M1 DB 10, 13, "ENTER PRODUCT ID: $"
+	RTN_M2 DB 10, 13, "APPROVAL FOR PRODUCT ID: $"
+	RTN_M3 DB 10, 13, "1. YES"
+		   DB 10, 13, "2. NO "
+		   DB 10, 13, " "
+		   DB 10, 13, "CHOICE:  $"
+	RTN_M4 DB 10, 13, "RETURN SUCCED, PROCEED TO REFUND $"
+	RTN_M5 DB 10, 13, "REFUND REQUEST FAIL $"
+	buff    db  26        ;MAX NUMBER OF CHARACTERS ALLOWED (25).
+            db  ?         ;NUMBER OF CHARACTERS ENTERED BY USER.
+            db  26 dup(0) ;CHARACTERS ENTERED BY USER.
+
 
 
 ;---SYSTEM MESSAGE
@@ -152,6 +165,47 @@ RETURN:
 	CMP BL, 5		; GO TO STAFF IF CHOICE != 5
 	JNE STAFF
 
+	PRINT RTN_M1
+;CAPTURE STRING FROM KEYBOARD.                                    
+            mov ah, 0Ah ;SERVICE TO CAPTURE STRING FROM KEYBOARD.
+            mov dx, offset buff
+            int 21h                 
+
+;CHANGE CHR(13) BY '$'.
+            mov si, offset buff + 1 ;NUMBER OF CHARACTERS ENTERED.
+            mov cl, [ si ] ;MOVE LENGTH TO CL.
+            mov ch, 0      ;CLEAR CH TO USE CX. 
+            inc cx ;TO REACH CHR(13).
+            add si, cx ;NOW SI POINTS TO CHR(13).
+            mov al, '$'
+            mov [ si ], al ;REPLACE CHR(13) BY '$'.            
+
+	PRINT RTN_M2
+;DISPLAY STRING.                   
+            mov ah, 9 ;SERVICE TO DISPLAY STRING.
+            mov dx, offset buff + 2 ;MUST END WITH '$'.
+            int 21h
+	
+	RTN_RESULT:
+		PRINT RTN_M3
+		CALL ACCEPT
+		MOV BL, AL
+		SUB BL, 30H
+			RTN_YES:
+				CMP BL, 1
+				JNE RTN_NO
+				PRINT RTN_M4
+				JMP TOP
+
+			RTN_NO:
+				CMP BL, 2
+				JNE RTN_INVALID
+				PRINT RTN_M5
+				JMP TOP
+
+			RTN_INVALID:
+				PRINT MSG2
+				JMP RTN_RESULT
 
 	JMP TOP
 
@@ -237,24 +291,6 @@ INVALID:
 ;	INT 21H
 
 
-READFILE PROC
-	mov ah, 3dh ;open the file
-	mov al, 0 ;open for reading
-	lea dx, file_name 
-	int 21h 
-	mov [filehandle], ax 
-
-	mov ah, 3fh  
-	lea dx, Text_Buffer
-	mov cx, 1 ; Read 1 Byte
-	mov bx, [filehandle] 
-	int 21h	
-
-	mov bx, [filehandle]
-	mov ah, 3eh ;close file
-	int 21h
-	ret
-ReadFile endp
 
 
 
