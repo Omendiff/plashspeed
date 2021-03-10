@@ -11,7 +11,7 @@ ENDM
 ;---------------Data Segment----------------
 .DATA	;data definition 
 ;---main menu
-	MAIN_MENU DB 10, 13, "XXXXXXXXXXXXXXXXXXXXXXXXXXX "
+	MAIN_MENU DB 10, 13, " "
 			  DB 10, 13, "-----PLASHSPEED POS----- "
 			  DB 10, 13, "1. CHECKOUT "
 			  DB 10, 13, "2. INVENTORY MANAGEMENT "
@@ -24,7 +24,7 @@ ENDM
 			  DB 10, 13, "CHOICE: $"
 	
 ;---inventory menu
-	INV_MENU DB 10, 13, "XXXXXXXXXXXXXXXXXXXXXXXXXXX "
+	INV_MENU DB 10, 13, " "
 			 DB 10, 13, "---------INVENTORY MANAGEMENT---------"
 			 DB 10, 13, "1. DISPLAY STOCK REPORT"
 			 DB 10, 13, "2. UPDATE STOCK"
@@ -35,7 +35,7 @@ ENDM
 			 DB 10, 13, "CHOICE: $"
 
 ;---staff menu 1
-	STF_MENU1 DB 10, 13, "XXXXXXXXXXXXXXXXXXXXXXXXXXX "
+	STF_MENU1 DB 10, 13, " "
 			  DB 10, 13, "-----------STAFF MANAGEMENT----------- "
 			  DB 10, 13, "1. STAFF REPORT "
 			  DB 10, 13, "2. NEW STAFF REGISTER "
@@ -45,7 +45,7 @@ ENDM
 			  DB 10, 13, "  "
 			  DB 10, 13, "CHOICE: $" 
 ;---staff change password
-	STF_MENU4 DB 10, 13, "XXXXXXXXXXXXXXXXXXXXXXXXXXX "
+	STF_MENU4 DB 10, 13, " "
 			  DB 10, 13, "------CHANGE PASSWORD------ "
 			  DB 10, 13, "ENTER CURRENT PASSWORD:  "
 			  DB 10, 13, "ENTER NEW PASSWORD:  "
@@ -78,6 +78,8 @@ MAIN PROC
 	MOV AX,@DATA  ; Define data segment
 	MOV DS,AX
 
+	MOV AX, 03H
+	INT 10H
 ;--------------codes
 TOP:
 	PRINT MAIN_MENU
@@ -92,6 +94,7 @@ CHECKOUT:
 	JNE INVENTORY
 
 	
+	PRINT MSG3
 	JMP TOP
 
 ;---------INVENTORY------------------
@@ -107,25 +110,33 @@ INVENTORY:
 	STK_REPORT:
 		CMP BL, 1
 		JNE STK_UPDATE
+		
 
+		PRINT MSG3
 		JMP TOP
 
 	STK_UPDATE:
 		CMP BL, 2
 		JNE STK_SET_RMD
 
+
+		PRINT MSG3
 		JMP TOP
 
 	STK_SET_RMD:
 		CMP BL, 3
 		JNE STK_RMD
 
+
+		PRINT MSG3
 		JMP TOP
 
 	STK_RMD:
 		CMP BL, 4
 		JNE EXIT_INV
 
+
+		PRINT MSG3
 		JMP TOP
 
 	EXIT_INV:
@@ -138,6 +149,7 @@ INVENTORY:
 		PRINT MSG2
 		JMP INVENTORY
 
+	PRINT MSG3
 	JMP TOP
 
 ;--------CUSTOMER MANAGEMENT--------------
@@ -146,6 +158,7 @@ CUSTOMER:
 	JNE SALES
 
 
+	PRINT MSG3
 	JMP TOP
 
 ;---------SALES REPORTING-------------------
@@ -154,6 +167,7 @@ SALES:
 	JNE RETURN
 
 
+	PRINT MSG3
 	JMP TOP
 
 ;---------RETURN AND REFUND----------------
@@ -192,19 +206,20 @@ RETURN:
 				CMP BL, 1
 				JNE RTN_NO
 				PRINT RTN_M4
+				PRINT MSG3
 				JMP TOP
 
 			RTN_NO:
 				CMP BL, 2
 				JNE RTN_INVALID
 				PRINT RTN_M5
+				PRINT MSG3
 				JMP TOP
 
 			RTN_INVALID:
 				PRINT MSG2
 				JMP RTN_RESULT
 
-	JMP TOP
 
 ;----------STAFF MANAGEMENT---------------
 STAFF:
@@ -221,7 +236,7 @@ STAFF:
 		JNE STF_NEW
 
 
-
+		PRINT MSG3
 		JMP TOP
 
 	STF_NEW:			; NEW STAFF START
@@ -229,6 +244,7 @@ STAFF:
 		JNE CHANGE_PASS
 
 
+		PRINT MSG3
 		JMP TOP			; NEW STAFF END
 
 	CHANGE_PASS:
@@ -236,6 +252,7 @@ STAFF:
 		JNE STF_REMOVE
 
 
+		PRINT MSG3
 		JMP TOP
 
 	STF_REMOVE:
@@ -243,13 +260,14 @@ STAFF:
 		JNE EXIT_STAFF
 
 
+		PRINT MSG3
 		JMP TOP
 
 	EXIT_STAFF:
 		CMP BL, 5			; EXIT
 		JNE STF_INVALID
-			PRINT MSG3
-			JMP TOP
+		PRINT MSG3
+		JMP TOP
 
 	STF_INVALID:
 		PRINT MSG2
@@ -266,18 +284,6 @@ EXIT:
 INVALID:
 	PRINT MSG2
 	JMP TOP
-
-
-;;---CHANGE PASSWORD------------------------------------------
-;CHANGE_PASS:
-;	MOV AH, 01H
-;	LEA DX, OFFSET OLD_PASS
-;	INT 21H
-
-
-
-
-
 
 
 
