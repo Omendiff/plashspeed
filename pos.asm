@@ -11,8 +11,7 @@ ENDM
 ;---------------Data Segment----------------
 .DATA	;data definition 
 ;---main menu
-	MAIN_MENU DB 10, 13, " "
-			  DB 10, 13, "-----PLASHSPEED POS----- "
+	MAIN_MENU DB 10, 13, 10, 13, "-----PLASHSPEED POS----- "
 			  DB 10, 13, "1. CHECKOUT "
 			  DB 10, 13, "2. INVENTORY MANAGEMENT "
 			  DB 10, 13, "3. CUSTOMER MANAGEMENT "
@@ -24,8 +23,7 @@ ENDM
 			  DB 10, 13, "CHOICE: $"
 	
 ;---inventory menu
-	INV_MENU DB 10, 13, " "
-			 DB 10, 13, "---------INVENTORY MANAGEMENT---------"
+	INV_MENU DB 10, 13, 10, 13, "---------INVENTORY MANAGEMENT---------"
 			 DB 10, 13, "1. DISPLAY STOCK REPORT"
 			 DB 10, 13, "2. UPDATE STOCK"
 			 DB 10, 13, "3. SET ORDER REMINDER"
@@ -35,8 +33,7 @@ ENDM
 			 DB 10, 13, "CHOICE: $"
 
 ;---staff menu 1
-	STF_MENU1 DB 10, 13, " "
-			  DB 10, 13, "-----------STAFF MANAGEMENT----------- "
+	STF_MENU1 DB 10, 13, 10, 13, "-----------STAFF MANAGEMENT----------- "
 			  DB 10, 13, "1. STAFF REPORT "
 			  DB 10, 13, "2. NEW STAFF REGISTER "
 			  DB 10, 13, "3. CHANGE PASSWORD OF CURRENT STAFF"
@@ -45,13 +42,15 @@ ENDM
 			  DB 10, 13, "  "
 			  DB 10, 13, "CHOICE: $" 
 ;---staff change password
-	STF_MENU4 DB 10, 13, " "
-			  DB 10, 13, "------CHANGE PASSWORD------ "
-			  DB 10, 13, "ENTER CURRENT PASSWORD:  "
-			  DB 10, 13, "ENTER NEW PASSWORD:  "
-			  DB 10, 13, "CONFIRM NEW PASSWORD:  "
+	STF_M1 DB 10, 13, 10, 13, "------CHANGE PASSWORD------ "
+		   DB 10, 13, "ENTER CURRENT PASSWORD: $"
+	STF_M2 DB 10, 13, "ENTER NEW PASSWORD: $"
+	STF_M3 DB 10, 13, "CONFIRM NEW PASSWORD: $"
+	STF_M4 DB 10, 13, "INVALID PASSWORD!!! $"
 	
-	OLD_PASS DB 26, ?, 26 DUP('$')
+	OLD_PSW DB 26, ?, 26 DUP('$')
+	NEW_PSW DB 26, ?, 26 DUP('$')
+	CON_PSW DB 26, ?, 26 DUP('$')
 
 
 ;---return and refund
@@ -62,7 +61,7 @@ ENDM
 		   DB 10, 13, " "
 		   DB 10, 13, "CHOICE:  $"
 	RTN_M4 DB 10, 13, "RETURN SUCCED, PROCEED TO REFUND.... $"
-	RTN_M5 DB 10, 13, "REFUND REQUEST DENIED $"
+	RTN_M5 DB 10, 13, "TERMS & CONDITIONS NOT MEET. REFUND REQUEST DENIED $"
 	RTN_ID DB 26, ?, 26 DUP(0)        ;MAX NUMBER OF CHARACTERS ALLOWED (25)
 
 ;---SYSTEM MESSAGE
@@ -251,6 +250,13 @@ STAFF:
 		CMP BL, 3
 		JNE STF_REMOVE
 
+		PRINT STF_M1
+		MOV  AH, 0AH
+		MOV DX, OFFSET OLD_PSW
+		INT 21H
+
+
+
 
 		PRINT MSG3
 		JMP TOP
@@ -285,14 +291,17 @@ INVALID:
 	PRINT MSG2
 	JMP TOP
 
-
+ACCEPT_STRING PROC NEAR
+	MOV  AH, 0AH
+	MOV DX, OFFSET STRING1
+	INT 21H
+	RET
+ACCEPT_STRING ENDP
 
 ;--------ACCEPT CHOICE PROCEDURE
 ACCEPT PROC NEAR
 	MOV AH, 01H
 	INT 21H
-
-
 	RET
 ACCEPT ENDP
 ;--------------EXIT PROGRAM
