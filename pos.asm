@@ -9,7 +9,17 @@ ENDM
 .STACK 64
 
 ;---------------Data Segment----------------
-.DATA	;data definition 
+.DATA	;data definition
+
+;---CONSTANTS
+	TEN DB 10
+	HUN DB 100
+
+	SHIRT DB 10
+	SHORTS DB 15
+	HATS DB 6
+	SOCKS DB 5
+
 ;---main menu
 	MAIN_MENU DB 10, 13, 10, 13, "-----PLASHSPEED POS----- "
 			  DB 10, 13, "1. CHECKOUT "
@@ -21,7 +31,21 @@ ENDM
 			  DB 10, 13, "9. EXIT "
 			  DB 10, 13, "  "
 			  DB 10, 13, "CHOICE: $"
-	
+
+;---product menu
+	PRO_MENU DB 10, 13, "-------PRODUCT MENU------- "
+			 DB 10, 13, "1. SHIRT"
+			 DB 10, 13, "2. SHORTS"
+			 DB 10, 13, "3. HATS"
+			 DB 10, 13, "4. SOCKS"
+			 DB 10, 13, "9. EXIT"
+			 DB 10, 13, " "
+			 DB 10, 13, "CHOICE: $"
+
+
+	RTN_QTY DB 0, 0, 0
+	RTN_TOT DB 0, 0, 0
+
 ;---inventory menu
 	INV_MENU DB 10, 13, 10, 13, "---------INVENTORY MANAGEMENT---------"
 			 DB 10, 13, "1. DISPLAY STOCK REPORT"
@@ -54,9 +78,10 @@ ENDM
 
 
 ;---return and refund
-	RTN_M1 DB 10, 13, "ENTER PRODUCT ID: $"
-	RTN_M2 DB 10, 13, "APPROVAL FOR PRODUCT ID: $"
-	RTN_M3 DB 10, 13, "1. YES"
+	RTN_M1 DB 10, 13, "ENTER QUANTITY TO RETURN: $"
+	RTN_M2 DB 10, 13, "TOTAL IS $"
+	RTN_M3 DB 10, 13, "ANY THING ELSE??"
+		   DB 10, 13, "1. YES"
 		   DB 10, 13, "2. NO "
 		   DB 10, 13, " "
 		   DB 10, 13, "CHOICE:  $"
@@ -69,6 +94,7 @@ ENDM
 	MSG2 DB 10, 13, "INVALID CHOICE, PLEASE TRY AGAIN!!! $"
 	MSG3 DB 10, 13, "REDIRECTING TO PLASHSPEED..... $"
 
+	CC DB 0
 
 ;---------------Code Segment----------------
 .CODE
@@ -83,13 +109,13 @@ MAIN PROC
 TOP:
 	PRINT MAIN_MENU
 	CALL ACCEPT		; USER ENTER CHOICE
-	MOV BL, AL
-	SUB BL, 30H
+	MOV CC, AL
+	SUB CC, 30H
 	
 
 ;---------CHECKOUT------------
 CHECKOUT:
-	CMP BL, 1		; GO TO INVENTORY IF CHOICE != 1
+	CMP CC, 1		; GO TO INVENTORY IF CHOICE != 1
 	JNE INVENTORY
 
 	
@@ -98,7 +124,7 @@ CHECKOUT:
 
 ;---------INVENTORY------------------
 INVENTORY:
-	CMP BL, 2		; GO TO CUSTOMER IF CHOICE != 2
+	CMP CC, 2		; GO TO CUSTOMER IF CHOICE != 2
 	JNE CUSTOMER
 
 	PRINT INV_MENU
@@ -153,7 +179,7 @@ INVENTORY:
 
 ;--------CUSTOMER MANAGEMENT--------------
 CUSTOMER:
-	CMP BL, 3		; GO TO SALES IF CHOICE != 3
+	CMP CC, 3		; GO TO SALES IF CHOICE != 3
 	JNE SALES
 
 
@@ -162,7 +188,7 @@ CUSTOMER:
 
 ;---------SALES REPORTING-------------------
 SALES:
-	CMP BL, 4		; GO TO RETURN IF CHOICE != 4
+	CMP CC, 4		; GO TO RETURN IF CHOICE != 4
 	JNE RETURN
 
 
@@ -171,58 +197,16 @@ SALES:
 
 ;---------RETURN AND REFUND----------------
 RETURN:
-	CMP BL, 5		; GO TO STAFF IF CHOICE != 5
+	CMP CC, 5		; GO TO STAFF IF CHOICE != 5
 	JNE STAFF
 
-	PRINT RTN_M1
-;CAPTURE STRING FROM KEYBOARD.                                    
-        mov ah, 0Ah ;SERVICE TO CAPTURE STRING FROM KEYBOARD.
-        mov dx, offset RTN_ID
-        int 21h                 
+		PRINT PRO_MENU
+		CALL RTN_CAL		
 
-;CHANGE CHR(13) BY '$'.
-        mov si, offset RTN_ID + 1 ;NUMBER OF CHARACTERS ENTERED.
-        mov cl, [ si ] ;MOVE LENGTH TO CL.
-        mov ch, 0      ;CLEAR CH TO USE CX. 
-        inc cx ;TO REACH CHR(13).
-        add si, cx ;NOW SI POINTS TO CHR(13).
-        mov al, '$'
-        mov [ si ], al ;REPLACE CHR(13) BY '$'.            
-
-
-	RTN_RESULT:
-		PRINT RTN_M2
-		;---DISPLAY STRING.                   
-        mov ah, 9 ;SERVICE TO DISPLAY STRING.
-        mov dx, offset RTN_ID + 2 ;MUST END WITH '$'.
-        int 21h
-	
-		PRINT RTN_M3
-		CALL ACCEPT
-		MOV BL, AL
-		SUB BL, 30H
-			RTN_YES:
-				CMP BL, 1
-				JNE RTN_NO
-				PRINT RTN_M4
-				PRINT MSG3
-				JMP TOP
-
-			RTN_NO:
-				CMP BL, 2
-				JNE RTN_INVALID
-				PRINT RTN_M5
-				PRINT MSG3
-				JMP TOP
-
-			RTN_INVALID:
-				PRINT MSG2
-				JMP RTN_RESULT
-
-
+		JMP TOP
 ;----------STAFF MANAGEMENT---------------
 STAFF:
-	CMP BL, 6		; EXIT IF CHOICE != 6
+	CMP CC, 6		; EXIT IF CHOICE != 6
 	JNE EXIT
 
 	PRINT STF_MENU1		
@@ -281,7 +265,7 @@ STAFF:
 
 ;-------EXIT----------------------
 EXIT:
-	CMP BL, 9
+	CMP CC, 9
 	JNE INVALID
 		PRINT MSG1
 		JMP QUIT 
@@ -291,12 +275,6 @@ INVALID:
 	PRINT MSG2
 	JMP TOP
 
-ACCEPT_STRING PROC NEAR
-	MOV  AH, 0AH
-	MOV DX, OFFSET STRING1
-	INT 21H
-	RET
-ACCEPT_STRING ENDP
 
 ;--------ACCEPT CHOICE PROCEDURE
 ACCEPT PROC NEAR
@@ -304,6 +282,206 @@ ACCEPT PROC NEAR
 	INT 21H
 	RET
 ACCEPT ENDP
+
+RTN_CAL PROC NEAR
+		MOV AH, 01H
+		INT 21H
+		MOV DL, AL
+		SUB DL, 30H
+		RTN_SHIRT:
+			CMP DL, 1
+			JNE RTN_SHORTS
+
+			PRINT RTN_M1
+			MOV AH, 01H		; DIGIT 1
+			INT 21H			
+			MOV RTN_QTY(0), AL
+			SUB RTN_QTY(0), 30H
+			MOV AH, 01H		; DIGIT 2
+			INT 21H				
+			MOV RTN_QTY(1), AL
+			SUB RTN_QTY(1), 30H
+			XOR AX, AX				; COMBINE DIGIT1 & DIGIT 2
+			MOV AL, RTN_QTY(0)
+			MUL TEN
+			ADD AL, RTN_QTY(1)
+			XOR DX, DX
+			XOR BX, BX
+
+			MUL SHIRT				; PRICE OF PRODUCT
+			DIV HUN
+			MOV RTN_TOT(0), AL
+			MOV DL, AH
+			XOR AX,AX
+			MOV AL, DL	
+			DIV Ten		
+			MOV RTN_TOT(1), AL
+			MOV RTN_TOT(2), AH
+			ADD RTN_TOT(0), 30H
+			ADD RTN_TOT(1), 30H
+			ADD RTN_TOT(2), 30H
+			PRINT RTN_M2
+
+			MOV AH, 02H
+			MOV DL, RTN_TOT(0)
+			INT 21H
+			MOV AH, 02H
+			MOV DL, RTN_TOT(1)
+			INT 21H
+			MOV AH, 02H
+			MOV DL, RTN_TOT(2)
+			INT 21H
+		
+			RET
+		RTN_SHORTS:
+			CMP DL, 2
+			JNE RTN_HATS
+
+			PRINT RTN_M1
+			MOV AH, 01H		; DIGIT 1
+			INT 21H			
+			MOV RTN_QTY(0), AL
+			SUB RTN_QTY(0), 30H
+			MOV AH, 01H		; DIGIT 2
+			INT 21H				
+			MOV RTN_QTY(1), AL
+			SUB RTN_QTY(1), 30H
+			XOR AX, AX				; COMBINE DIGIT1 & DIGIT 2
+			MOV AL, RTN_QTY(0)
+			MUL TEN
+			ADD AL, RTN_QTY(1)
+			XOR DX, DX
+			XOR BX, BX
+
+			MUL SHORTS				; PRICE OF PRODUCT
+			DIV HUN
+			MOV RTN_TOT(0), AL
+			MOV DL, AH
+			XOR AX,AX
+			MOV AL, DL	
+			DIV Ten		
+			MOV RTN_TOT(1), AL
+			MOV RTN_TOT(2), AH
+			ADD RTN_TOT(0), 30H
+			ADD RTN_TOT(1), 30H
+			ADD RTN_TOT(2), 30H
+			PRINT RTN_M2
+
+			MOV AH, 02H
+			MOV DL, RTN_TOT(0)
+			INT 21H
+			MOV AH, 02H
+			MOV DL, RTN_TOT(1)
+			INT 21H
+			MOV AH, 02H
+			MOV DL, RTN_TOT(2)
+			INT 21H
+
+			RET
+		RTN_HATS:
+			CMP DL, 3
+			JNE RTN_SOCKS
+
+			PRINT RTN_M1
+			MOV AH, 01H		; DIGIT 1
+			INT 21H			
+			MOV RTN_QTY(0), AL
+			SUB RTN_QTY(0), 30H
+			MOV AH, 01H		; DIGIT 2
+			INT 21H				
+			MOV RTN_QTY(1), AL
+			SUB RTN_QTY(1), 30H
+			XOR AX, AX				; COMBINE DIGIT1 & DIGIT 2
+			MOV AL, RTN_QTY(0)
+			MUL TEN
+			ADD AL, RTN_QTY(1)
+			XOR DX, DX
+			XOR BX, BX
+
+			MUL HATS				; PRICE OF PRODUCT
+			DIV HUN
+			MOV RTN_TOT(0), AL
+			MOV DL, AH
+			XOR AX,AX
+			MOV AL, DL	
+			DIV Ten		
+			MOV RTN_TOT(1), AL
+			MOV RTN_TOT(2), AH
+			ADD RTN_TOT(0), 30H
+			ADD RTN_TOT(1), 30H
+			ADD RTN_TOT(2), 30H
+			PRINT RTN_M2
+
+			MOV AH, 02H
+			MOV DL, RTN_TOT(0)
+			INT 21H
+			MOV AH, 02H
+			MOV DL, RTN_TOT(1)
+			INT 21H
+			MOV AH, 02H
+			MOV DL, RTN_TOT(2)
+			INT 21H
+
+			RET
+		RTN_SOCKS:
+			CMP DL, 4
+			JNE RTN_EXIT
+
+			PRINT RTN_M1
+			MOV AH, 01H		; DIGIT 1
+			INT 21H			
+			MOV RTN_QTY(0), AL
+			SUB RTN_QTY(0), 30H
+			MOV AH, 01H		; DIGIT 2
+			INT 21H				
+			MOV RTN_QTY(1), AL
+			SUB RTN_QTY(1), 30H
+			XOR AX, AX				; COMBINE DIGIT1 & DIGIT 2
+			MOV AL, RTN_QTY(0)
+			MUL TEN
+			ADD AL, RTN_QTY(1)
+			XOR DX, DX
+			XOR BX, BX
+
+			MUL SOCKS				; PRICE OF PRODUCT
+			DIV HUN
+			MOV RTN_TOT(0), AL
+			MOV DL, AH
+			XOR AX,AX
+			MOV AL, DL	
+			DIV Ten		
+			MOV RTN_TOT(1), AL
+			MOV RTN_TOT(2), AH
+			ADD RTN_TOT(0), 30H
+			ADD RTN_TOT(1), 30H
+			ADD RTN_TOT(2), 30H
+			PRINT RTN_M2
+
+			MOV AH, 02H
+			MOV DL, RTN_TOT(0)
+			INT 21H
+			MOV AH, 02H
+			MOV DL, RTN_TOT(1)
+			INT 21H
+			MOV AH, 02H
+			MOV DL, RTN_TOT(2)
+			INT 21H
+
+			RET
+		RTN_EXIT:
+			CMP DL, 9			; EXIT
+			JNE RTN_INVALID
+			PRINT MSG3
+			JMP TOP
+
+		RTN_INVALID:
+			PRINT MSG2
+			JMP RETURN
+
+			RET
+RTN_CAL ENDP
+
+
 ;--------------EXIT PROGRAM
 QUIT:				; EXIT PROGRAM
 	MOV AH, 4CH
