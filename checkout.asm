@@ -1,0 +1,280 @@
+;----CHECKOUT
+.MODEL SMALL
+.STACK 64
+
+;----------------------Data Segment----------------
+.DATA			;data definition 
+	M1 DB 13,10, "PLEASE ENTER PRODUCT CODE: $"
+	M2 DB 13,10, "PLEASE ENTER PRODUCT PRICE: $"
+
+QUANTITY DB 0 
+PRICE    DB 0
+TOTAL    DB 0, 0 
+
+PRO_MENU DB 10, 13, "-------PRODUCT MENU------- "
+			 DB 10, 13, "1. SHIRT"
+			 DB 10, 13, "2. SHORTS"
+			 DB 10, 13, "3. HATS"
+			 DB 10, 13, "4. SOCKS"
+			 DB 10, 13, "9. EXIT"
+			 DB 10, 13, " "
+			 DB 10, 13, "CHOICE: $"
+
+;----------------------Code Segment----------------
+.CODE
+MAIN PROC FAR
+ 	MOV AX, @DATA	; Define data segment
+	MOV DS, AX
+
+ 	;codes
+    BEGIN:
+    ;-------------- 1.REQUEST FOR PRODUCT CODE
+        ;1A. PROMPT MSG TO REQUEST PRODUCT CODE
+        MOV AH, 09H
+        LEA DX, IMSG
+        INT 21H
+
+        ;1B. read user input (input char, AH=01H)
+        MOV AH, 01H
+        INT 21H
+
+        ;1C. save the input quantity
+        MOV QUANTITY, AL
+        ;-------------- 2.REQUEST FOR PRODUCT PRICE
+        ;2A. prompt msg to request quantity (output string)
+        MOV AH, 09H
+        LEA DX, MSG2
+        INT 21H
+
+        ;2B. read user input (input char, AH=01H)
+        MOV AH, 01H
+        INT 21H
+        ;2C. save the input quantity
+        MOV PRICE, AL
+    LOOP BEGIN:
+     
+	MOV AH,01H	;READ 1 BYTE INPUT (1 CHARACTER) & STORE IN AL 
+	INT 21H
+
+	ADD AL, 20H
+
+	MOV AH, 09H
+	LEA DX, OMSG
+	INT 21H
+
+	MOV AH,02H
+	MOV DL, AL
+	INT 21H
+	
+	MOV AX,4C00H
+	INT 21H
+
+	CHECKOUT_CAL PROC NEAR
+        PRINT  checkOut_M1
+		MOV AH, 01H
+		INT 21H
+		MOV DL, AL
+		SUB DL, 30H
+
+        PRINT  checkOut_M4
+		MOV AH, 01H
+		INT 21H
+		MOV BL, AL
+		SUB BL, 30H
+ 
+		CHECKOUT_SHIRT:
+			CMP DL, 1
+			JNE CHECKOUT_SHORTS
+
+			PRINT checkOut_M2
+			MOV AH, 01H		; DIGIT 1
+			INT 21H			
+			MOV CHECKOUT_QTY(0), AL
+			SUB CHECKOUT_QTY(0), 30H
+			MOV AH, 01H		; DIGIT 2
+			INT 21H				
+			MOV CHECKOUT_QTY(1), AL
+			SUB CHECKOUT_QTY(1), 30H
+			XOR AX, AX				; COMBINE DIGIT1 & DIGIT 2
+			MOV AL, CHECKOUT_QTY(0)
+			MUL TEN
+			ADD AL, CHECKOUT_QTY(1)
+			MUL TAX
+            DIV HUN
+
+
+			XOR DX, DX
+			XOR BX, BX
+			MUL SHIRT				; PRICE OF PRODUCT
+			DIV HUN
+			MOV CHECKOUT_TOT(0), AL
+			MOV DL, AH
+			XOR AX,AX
+			MOV AL, DL	
+			DIV Ten		
+			MOV CHECKOUT_TOT(1), AL
+			MOV CHECKOUT_TOT(2), AH
+
+            ;DISPLAY
+			ADD CHECKOUT_TOT(0), 30H ;convert to hex number
+			ADD CHECKOUT_TOT(1), 30H
+			ADD CHECKOUT_TOT(2), 30H
+			PRINT checkOut_M5
+			MOV AH, 02H
+			MOV DL, CHECKOUT_TOT(0)
+			INT 21H
+			MOV AH, 02H
+			MOV DL, CHECKOUT_TOT(1)
+			INT 21H
+			MOV AH, 02H
+			MOV DL, CHECKOUT_TOT(2)
+			INT 21H
+		
+			RET
+		CHECKOUT_SHORTS:
+			CMP DL, 2
+			JNE CHECKOUT_HATS
+
+			PRINT checkOut_M2
+			MOV AH, 01H		; DIGIT 1
+			INT 21H			
+			MOV CHECKOUT_QTY(0), AL
+			SUB CHECKOUT_QTY(0), 30H
+			MOV AH, 01H		; DIGIT 2
+			INT 21H				
+			MOV CHECKOUT_QTY(1), AL
+			SUB CHECKOUT_QTY(1), 30H
+			XOR AX, AX				; COMBINE DIGIT1 & DIGIT 2
+			MOV AL, CHECKOUT_QTY(0)
+			MUL TEN
+			ADD AL, CHECKOUT_QTY(1)
+			XOR DX, DX
+			XOR BX, BX
+
+			MUL SHORTS				; PRICE OF PRODUCT
+			DIV HUN
+			MOV CHECKOUT_TOT(0), AL
+			MOV DL, AH
+			XOR AX,AX
+			MOV AL, DL	
+			DIV Ten		
+			MOV CHECKOUT_TOT(1), AL
+			MOV CHECKOUT_TOT(2), AH
+			ADD CHECKOUT_TOT(0), 30H
+			ADD CHECKOUT_TOT(1), 30H
+			ADD CHECKOUT_TOT(2), 30H
+			PRINT checkOut_M5
+			MOV AH, 02H
+			MOV DL, CHECKOUT_TOT(0)
+			INT 21H
+			MOV AH, 02H
+			MOV DL, CHECKOUT_TOT(1)
+			INT 21H
+			MOV AH, 02H
+			MOV DL, CHECKOUT_TOT(2)
+			INT 21H
+
+			RET
+		CHECKOUT_HATS:
+			CMP DL, 3
+			JNE CHECKOUT_SOCKS
+
+			PRINT checkOut_M2
+			MOV AH, 01H		; DIGIT 1
+			INT 21H			
+			SUB CHECKOUT_QTY(0), 30H
+			MOV CHECKOUT_QTY(0), AL
+			MOV AH, 01H		; DIGIT 2
+			INT 21H				
+			MOV CHECKOUT_QTY(1), AL
+			SUB CHECKOUT_QTY(1), 30H
+			XOR AX, AX				; COMBINE DIGIT1 & DIGIT 2
+			MOV AL, CHECKOUT_QTY(0)
+			MUL TEN
+			ADD AL, CHECKOUT_QTY(1)
+			XOR DX, DX
+			XOR BX, BX
+
+			MUL HATS				; PRICE OF PRODUCT
+			DIV HUN
+			MOV CHECKOUT_TOT(0), AL
+			MOV DL, AH
+			XOR AX,AX
+			MOV AL, DL	
+			DIV Ten		
+			MOV CHECKOUT_TOT(1), AL
+			MOV CHECKOUT_TOT(2), AH
+			ADD CHECKOUT_TOT(0), 30H
+			ADD CHECKOUT_TOT(1), 30H
+			ADD CHECKOUT_TOT(2), 30H
+			PRINT checkOut_M5
+			MOV AH, 02H
+			MOV DL, CHECKOUT_TOT(0)
+			INT 21H
+			MOV AH, 02H
+			MOV DL, CHECKOUT_TOT(1)
+			INT 21H
+			MOV AH, 02H
+			MOV DL, CHECKOUT_TOT(2)
+			INT 21H
+
+			RET
+		CHECKOUT_SOCKS:
+			CMP DL, 4
+			JNE CHECKOUT_EXIT
+
+			PRINT checkOut_M2
+			MOV AH, 01H		; DIGIT 1
+			INT 21H			
+			MOV CHECKOUT_QTY(0), AL
+			SUB CHECKOUT_QTY(0), 30H
+			MOV AH, 01H		; DIGIT 2
+			INT 21H				
+			MOV CHECKOUT_QTY(1), AL
+			SUB CHECKOUT_QTY(1), 30H
+			XOR AX, AX				; COMBINE DIGIT1 & DIGIT 2
+			MOV AL, CHECKOUT_QTY(0)
+			MUL TEN
+			ADD AL, CHECKOUT_QTY(1)
+			XOR DX, DX
+			XOR BX, BX
+
+			MUL SOCKS				; PRICE OF PRODUCT
+			DIV HUN
+			MOV CHECKOUT_TOT(0), AL
+			MOV DL, AH
+			XOR AX,AX
+			MOV AL, DL	
+			DIV Ten		
+			MOV CHECKOUT_TOT(1), AL
+			MOV CHECKOUT_TOT(2), AH
+			ADD CHECKOUT_TOT(0), 30H
+			ADD CHECKOUT_TOT(1), 30H
+			ADD CHECKOUT_TOT(2), 30H
+			PRINT checkOut_M5
+			MOV AH, 02H
+			MOV DL, CHECKOUT_TOT(0)
+			INT 21H
+			MOV AH, 02H
+			MOV DL, CHECKOUT_TOT(1)
+			INT 21H
+			MOV AH, 02H
+			MOV DL, CHECKOUT_TOT(2)
+			INT 21H
+
+			RET
+		CHECKOUT_EXIT:
+			CMP DL, 9			; EXIT
+			JNE CHECKOUT_INVALID
+			PRINT MSG3
+			JMP TOP
+
+		CHECKOUT_INVALID:
+			PRINT MSG2
+			JMP RETURN
+
+			RET
+CHECKOUT_CAL ENDP
+
+	MAIN ENDP
+	END MAIN
