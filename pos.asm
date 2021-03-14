@@ -11,6 +11,14 @@ ENDM
 ;---------------Data Segment----------------
 .DATA	;data definition
 
+;------LOGIN
+	PASSCODE DB "LAOYATARC$"
+  	LOGIN_M1 DB "------PLASHSPEED POS------"
+  			 DB 10, 13, "ENTER PASSWORD: $"
+ 	LG DB 21          ;<=== MAXIMUM NUMBER OF CHARS ALLOWED (20).
+       DB ?           ;<=== NUMBER OF CHARS THAT USER ENTERED (?).
+       DB 21 DUP(0)   ;<=== ARRAY OF CHARS (FINISH WITH 0DH=13).
+
 ;---CONSTANTS
 	TEN DB 10
 	HUN DB 100
@@ -118,8 +126,44 @@ MAIN PROC
 	MOV AX,@DATA  ; Define data segment
 	MOV DS,AX
 
+
+;-----LOGIN
+LOGIN:
 	MOV AX, 03H
 	INT 10H
+
+	mov ah, 09h
+	lea dx, LOGIN_M1
+	int 21h
+
+	mov ah, 0ah
+	MOV DX, OFFSET LG     ;<=== TELL INT 21H TO STORE CAPTURED STRING HERE.
+	int 21h
+
+	MOV SI, OFFSET LG + 2 ;<=== POINT TO THE ARRAY OF CHARS.
+	MOV DI, OFFSET PASSCODE      ;<=== POINT TO THE USER.
+	ck: 
+	;CHECK END OF USER.  
+	  MOV DH, [DI]
+	  CMP DH, '$'
+	  JE  CLR_SCN                ;<=== END REACHED. ALL CHARS MATCH.
+
+	;CHECK END OF INPUT.  
+	  MOV DL, [SI]          ;<=== CURRENT ENTERED CHAR.
+	  CMP DL, 13
+	  JE  LOGIN             ;<=== END REACHED. INPUT IS SHORTER.
+
+	;COMPARE CURRENT ENTERED CHAR TO CURRENT USER CHAR.  
+	  CMP DL, DH
+	  jne LOGIN             ;<=== CURRENT CHARS ARE DIFFERENT.
+	  INC SI                ;<== NEXT ENTERED CHAR.
+	  INC DI                ;<== NEXT USER CHAR.
+	  JMP CK                ;<== REPEAT.
+
+CLR_SCN:
+	MOV AX, 03H
+	INT 10H
+
 ;--------------codes
 TOP:
 	PRINT MAIN_MENU
@@ -136,7 +180,7 @@ CHECKOUT:
 	
 
 
-	
+
 	PRINT MSG3
 	JMP TOP
 
