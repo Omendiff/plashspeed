@@ -50,9 +50,10 @@ INV_SOCKS PROC NEAR
 			RET
 INV_SOCKS ENDP
 
-	UP_SHIRT:
-		CMP DL, 1
-		JNE UP_SHORTS
+;-----------------------------------
+	
+
+
 ;-------CAPTURE STRING
 	PRINT RTN_M1
 ;CAPTURE STRING FROM KEYBOARD.                                    
