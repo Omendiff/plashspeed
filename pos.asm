@@ -126,7 +126,7 @@ ENDM
 			  DB 10, 13, "CHOICE: $" 
 ;---staff change password
 	STF_M1 DB 10, 13, 10, 13, "------CHANGE PASSWORD------ "
-		   DB 10, 13, "   *** 8 CHARACTERS *** "
+		   DB 10, 13, "   *** 4 CHARACTERS *** "
 		   DB 10, 13, "ENTER NEW PASSWORD  : $"
 	STF_M2 DB 10, 13, "CONFIRM NEW PASSWORD: $"
 	STF_M3 DB 10, 13, "2 PASSWORS MUST BE SAME!!! $"
