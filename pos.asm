@@ -246,7 +246,7 @@ ENDM
 	CUSTOMER_MENU1 	DB 10, 13, 10, 13, "-----------MEMBERSHIP MANAGEMENT----------- "
 			 	   	DB 10, 13, " 1. NEW MEMBER REGISTER "
 			  		DB 10, 13, " 2. REMOVE MEMBER "
-			  		DB 10, 13, " 3. EXIT "
+			  		DB 10, 13, " 9. EXIT "
 			  		DB 10, 13, "  "
 			  		DB 10, 13, "CHOICE: $" 
 
@@ -262,10 +262,10 @@ ENDM
 	MEMBER_M6  DB 10, 13, "MEMBER REGISTER FAILED $"
 	MEMBER_M7  DB 10, 13, " $"
 	MEMBER_M8  DB 10, 13, "MEMBER REMOVE SUCCEED"
-	MEMBER_IC_ADD DB 16, ?, 16 DUP('$')
 	MEMBER_PHONE_ADD DB 16, ?, 16 DUP('$')
 	MEMBER_IC_REMOVE DB 16, ?, 16 DUP('$')
 	MEMBER_PHONE_REMOVE DB 16, ?, 16 DUP('$')
+	IC_ADD DB 12 DUP(0)
 ;---REGISTER NEW MEMBER END
 
 ;---REMOVE MEMBER
@@ -1951,13 +1951,48 @@ CHECKOUT_CAL PROC NEAR
 			RET
 CHECKOUT_CAL ENDP
 
-ADD_CUSTOMER PROC NEAR
-	PRINT MEMBER_M1                                
-    MOV AH, 0AH 			;CAPTURE CUSTOMER IC NUM.
-    MOV DX, OFFSET MEMBER_IC_ADD
-    INT 21H
+ADD_CUSTOMER PROC NEAR                              
+   ;-----2. PROMPT FOR IC
+    ICINPUT:
+	PRINT MEMBER_M1              
+	;PART 2:READ USER INPUT
+	MOV CX, 12             ;SET COUNTER TO READ 4 BYTES
+	MOV SI, 0             ;SAVE DATA INTO PW
 	
+	INPUTIC:
+	       MOV AH, 01H    ;READ 1 BYTE WHILE DO NOT DISPLAY ON SCREEN
+		   INT 21H
+		   
+		   MOV IC_ADD[SI], AL     
+		   INC SI
+		   LOOP INPUTIC
+	
+	IC_CHECKDIGIT:
+	           MOV SI, 0
+			   XOR AX, AX
+			   
+			   IC_LOWER:               ;CHECK IF LESS THAN 30 OR NOT
+			         CMP SI, 12
+					 JE PHONE_NO   
+					 
+					 CMP IC_ADD[SI], 30H   
+					 JL IC_ERROR2      ;NOT DIGIT 
+					 JGE IC_UPPER
+			   IC_UPPER:               ;CHECK IF MORE THAN 39
+			         CMP IC_ADD[SI], 39H
+					 JG  IC_ERROR2     ;NOT DIGIT
+					 JLE [IC_NEXTP]
+					 
+			   IC_NEXTP:
+			         INC SI
+					 JMP IC_LOWER
+					 
+	IC_ERROR2:
+		  PRINT INV_M14
 
+           JMP ICINPUT 
+	
+	PHONE_NO:
 	PRINT MEMBER_M2
 	MOV AH, 0AH 			;CAPTURE MEMBER PHONE NUM.
     MOV DX, OFFSET MEMBER_PHONE_ADD
@@ -1965,7 +2000,7 @@ ADD_CUSTOMER PROC NEAR
 
 	MEMBER_ADD:
 		PRINT MEMBER_M3              
-    	MOV AH, 9 					;DISPLAY STRING.
+    	MOV AH, 9 						;DISPLAY STRING.
     	MOV DX, OFFSET STF_ID_ADD + 2	;MUST END WITH '$'.
    		INT 21H
 
