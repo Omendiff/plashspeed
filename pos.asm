@@ -222,7 +222,7 @@ ENDM
 				DB 10, 13, "RECEIPT NO: A0001$"
 
 	checkOut_M5 DB 10, 13, "PRICE BEFORE TAX: RM $"
-	checkOut_M6 DB 10, 13, "TAX: 6% $"
+	checkOut_M6 DB 10, 13, "TAX: 10% $"
 	checkOut_M7 DB 10, 13, "PRICE AFTER TAX: RM $"
 	
 	CHECKOUT_QTY DB 0
